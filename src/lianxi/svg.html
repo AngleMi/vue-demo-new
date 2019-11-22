@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="http://www.softwhy.com/" />
+  <title>蚂蚁部落</title>
+</head>
+
+<body>
+  <div class="div1">
+    <!-- <svg id="svg1" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"> -->
+    <svg id='svg'></svg>
+    </svg>
+  </div>
+  <script type="text/javascript">
+    // Given three colinear points p, q, r, the function checks if
+    // point q lies on line segment 'pr'
+    onSegment (p, q, r) {
+      if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) && q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y)){
+          return true;
+        }
+      return false;
+    }
+
+  </script>
+</body>
+
+</html>
