@@ -37,11 +37,11 @@
                     @mousemove="handleMouseMove($event,item.id,item.width,item.actualwidth,item.duration)"
                     @mouseup="handleMouseUp($event,item.id,item.width,item.actualwidth,item.duration,item.url)"
                 >
-                    <div
-                        class="video_control-bg-inside"
-                        :style="{ width: percent + '%'}"
-                    >
-                    </div>
+                </div>
+                <div
+                    class="video_control-bg-inside"
+                    :style="{ width: percent + '%'}"
+                >
                 </div>
             </div>
             <!-- 时间 -->
@@ -59,11 +59,12 @@ export default {
   data () {
     return {
       video1Url: require('../assets/phoenix_class.mp4'),
+      // video1Url: require('../assets//video_demo.mp4'),
       videoOptions: {
         downState: false,
-        play: false,
-        leftInit: 0,
-        distance: 0
+        play: false
+        // leftInit: 0,
+        // distance: 0
       },
       videoDataList: [
         {
@@ -98,7 +99,8 @@ export default {
       currentId: null,
       videoMap: new Map(),
       isLastVideo: false,
-      percent: 0
+      percent: 0,
+      offsetArry: []
     }
   },
   mounted () {
@@ -109,7 +111,7 @@ export default {
       this.videoPoi = this.$refs['video_control-bg-inside-point']
       this.videoCotrolBg = this.$refs['video-control-bg']
       this.totalWidth = this.videoCotrolBg.clientWidth
-      this.videoOptions.leftInit = this.getOffset(this.videoCotrolBg).left
+      // this.videoOptions.leftInit = this.getOffset(this.videoCotrolBg).left
       this.initMedaData()
     })
   },
@@ -120,6 +122,7 @@ export default {
         this.duration = this.timeTranslate(this.totalDuration)
         let preWidth = 0
         this.videoDataList.forEach((item, index) => {
+          const obj = {}
           if (index !== this.videoDataList.length - 1) {
             this.$set(item, 'width', (item.duration / this.totalDuration) * this.totalWidth)
             preWidth += item.width
@@ -130,12 +133,15 @@ export default {
             this.currentId = item.id
           }
           this.videoMap.set(item.id, item)
+          obj.id = item.id
+          obj.width = (item.duration / this.totalDuration) * this.totalWidth
+          this.offsetArry.push(obj)
         })
         const len = this.videoDataList.length
         this.$set(this.videoDataList[len - 1], 'width', this.totalWidth - preWidth)
       })
       this.videoDom1.addEventListener('timeupdate', () => { // 监听视频播放过程中的时间
-        // this.percent = 100 * this.videoDom1.currentTime / this.videoDom1.duration
+        this.percent = 100 * this.videoDom1.currentTime / this.videoDom1.duration
         this.currentTime1 = this.videoDom1.currentTime
         this.currentTime = this.timeTranslate(this.videoDom1.currentTime)
       })
@@ -166,19 +172,19 @@ export default {
     },
     handleMouseDown (ev, width) {
       this.videoOptions.downState = true
-      this.videoOptions.distance = ev.clientX - this.videoOptions.leftInit
+      // this.videoOptions.distance = ev.clientX - this.videoOptions.leftInit
     },
     handleMouseMove (ev, id, width, actualwidth, duration) {
       const offset = ev.offsetX
-      const videoCotrolBg = this.$refs['video-control-bg']
+      // const videoCotrolBg = this.$refs['video-control-bg']
       if (!this.videoOptions.downState) return
-      let disX = ev.clientX - this.videoOptions.leftInit
-      if (disX > videoCotrolBg.clientX) {
-        disX = videoCotrolBg.clientX
-      }
-      if (disX < 0) {
-        disX = 0
-      }
+      // let disX = ev.clientX - this.videoOptions.leftInit
+      // if (disX > videoCotrolBg.clientX) {
+      //   disX = videoCotrolBg.clientX
+      // }
+      // if (disX < 0) {
+      //   disX = 0
+      // }
       if (actualwidth) {
         const ratio = (actualwidth / width)
         let currentTime2 = offset * ratio * duration
@@ -192,16 +198,16 @@ export default {
         const currentTime2 = (offset / width) * duration
         this.videoDom2.currentTime = currentTime2
       }
-      this.videoOptions.distance = disX
-      const currentTime1 = (this.videoOptions.distance / this.totalWidth) * this.videoDom1.duration
+      // this.videoOptions.distance = disX
+      const offsetBGX = offset + this.getOffset1(id)
+      const currentTime1 = (offsetBGX / this.totalWidth) * this.videoDom1.duration
+      this.percent = 100 * this.videoDom1.currentTime / this.videoDom1.duration
       this.videoDom1.currentTime = currentTime1
       this.currentTime = this.timeTranslate(this.videoDom1.currentTime)
     },
     handleMouseUp (ev, id, width, actualwidth, duration, url) {
       this.currentId = id
       const offset = ev.offsetX
-      //   console.log(ev.layerX, 'layerX')
-      //   console.log(this.videoOptions.distance)
       this.videoOptions.downState = false
       const urlsrc = this.videoDom2.src.substring(21)
       if (urlsrc !== url) {
@@ -210,7 +216,8 @@ export default {
       if (this.videoOptions.play) {
         this.play()
       }
-      const currentTime1 = (this.videoOptions.distance / this.totalWidth) * this.videoDom1.duration
+      const offsetBGX = offset + this.getOffset1(id)
+      const currentTime1 = (offsetBGX / this.totalWidth) * this.videoDom1.duration
       if (actualwidth) {
         const ratio = (actualwidth / width)
         let currentTime2 = offset * ratio * duration
@@ -222,32 +229,38 @@ export default {
       } else {
         this.isLastVideo = false
         const currentTime2 = (offset / width) * duration
-        console.log(currentTime2, 'currentTime2')
         this.videoDom2.currentTime = currentTime2
       }
-      console.log(currentTime1, 'currentTime1')
       this.videoDom1.currentTime = currentTime1
+      this.percent = 100 * this.videoDom1.currentTime / this.videoDom1.duration
       this.currentTime1 = this.videoDom1.currentTime
-    //   console.log(this.videoDom1.currentTime, 'video1当前时间')
-    //   console.log(this.videoDom2.currentTime, 'video2当前时间')
-      //   this.percent = 100 * this.videoDom1.currentTime / this.videoDom1.duration
-      //   this.currentTime = this.timeTranslate(this.videoDom1.currentTime)
     },
     timeTranslate (t) { // 时间转化
       let m = Math.floor(t / 60)
       m < 10 && (m = '0' + m)
       return m + ':' + (t % 60 / 100).toFixed(2).slice(-2)
     },
-    getOffset (node, offset) { // 获取当前屏幕下进度条的左偏移量
-      if (!offset) {
-        offset = {}
-        offset.left = 0
+    // getOffset (node, offset) { // 获取当前屏幕下进度条的左偏移量
+    //   if (!offset) {
+    //     offset = {}
+    //     offset.left = 0
+    //   }
+    //   if (node === document.body || node === null) {
+    //     return offset
+    //   }
+    //   offset.left += node.offsetLeft
+    //   return this.getOffset(node.offsetParent, offset)
+    // },
+    getOffset1 (id) {
+      let width = 0
+      for (let i = 0; i < this.offsetArry.length; i++) {
+        if (id === this.offsetArry[i].id) {
+          break
+        } else {
+          width += this.offsetArry[i].width
+        }
       }
-      if (node === document.body || node === null) {
-        return offset
-      }
-      offset.left += node.offsetLeft
-      return this.getOffset(node.offsetParent, offset)
+      return width
     }
   }
 
@@ -310,7 +323,8 @@ export default {
                 .video_control-bg-outside{
                     height: 5px;
                     border-radius: 2.5px;
-                    background-color: #555;
+                    background-color: transparent;
+                    z-index:2;
                     cursor: pointer;
                 }
                 .video_control-bg-inside{
@@ -322,6 +336,7 @@ export default {
                     left: 0;
                     top: 0;
                     background-color: #fff;
+                    z-index: 1;
                     transition: all 0.2s;
                 }
                 .video_control-bg-inside-point{
